@@ -770,8 +770,42 @@ fn mk(config: &Config, opts: &MkOptions<'_>) -> CargoResult<()> {
         array.push(registry);
         manifest["package"]["publish"] = toml_edit::value(array);
     }
+
+    let prefix = r#"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# The default settings for release builds are reasonable, but if you want higher performance there
+# are several options worth considering. Uncomment the relevant lines to try them.
+[profile.release]
+
+# This enables some extra optimization during code generation. It can increase runtime speed and
+# reduce binary size at the cost of slower compile times.
+#codegen-units = 1
+
+# This enables link-time optimization. It can increase runtime speed and reduce binary size at the
+# cost of slower compile times. "thin" is a basic version. "fat" is a more aggressive version that
+# may have larger effects.
+#lto = "thin"
+#lto = "fat"
+
+# This optimizes for code size. It can reduce binary size at the cost of worse runtime speed.
+#opt-level = "z"
+
+# This causes your program to immediately abort on panic, which is suitable if you do not need to
+# catch or unwind panics. It can reduce binary size and improve runtime speed.
+#panic = "abort"
+
+# This causes the compiler to strip some information from the compiled program. This may reduce
+# binary size at the cost of making the program more difficult to debug and profile. For example,
+# backtraces on panic may be less informative. "debuginfo" strips just debug info. "symbols" strips
+# both debug info and symbols.
+#strip = "debuginfo"
+#strip = "symbols"
+
+"#;
+
     let mut dep_table = toml_edit::Table::default();
-    dep_table.decor_mut().set_prefix("\n# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n\n");
+    dep_table.decor_mut().set_prefix(prefix);
     manifest["dependencies"] = toml_edit::Item::Table(dep_table);
 
     // Calculate what `[lib]` and `[[bin]]`s we need to append to `Cargo.toml`.
